@@ -192,8 +192,9 @@ class MainActivity : AppCompatActivity(), Detector.DetectorListener {
             val button = Button(this).apply {
                 text = name
                 setOnClickListener {
-                    // Navigate to MainActivity2 on button click
+                    // Navigate to MainActivity2 on button click and pass the object name
                     val intent = Intent(this@MainActivity, MainActivity2::class.java)
+                    intent.putExtra("objectName", name)
                     startActivity(intent)
                 }
             }

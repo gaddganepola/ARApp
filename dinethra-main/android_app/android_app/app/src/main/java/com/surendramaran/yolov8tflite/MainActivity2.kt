@@ -1,6 +1,7 @@
 package com.surendramaran.yolov8tflite
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Choreographer
 import android.view.SurfaceView
 import android.widget.FrameLayout
@@ -17,6 +18,7 @@ class MainActivity2 : AppCompatActivity() {
         init {
             Utils.init()
         }
+        private const val TAG = "MainActivity2"
     }
 
     private lateinit var surfaceView: SurfaceView
@@ -33,25 +35,22 @@ class MainActivity2 : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Use the activity_main2.xml layout (ensure it has a container with id "filament_container")
+        // Use the activity_main2.xml layout
         setContentView(R.layout.activity_main2)
 
-        // Initialize the Choreographer.
         choreographer = Choreographer.getInstance()
 
-        // Get the container from the layout and create a SurfaceView.
         val container = findViewById<FrameLayout>(R.id.filament_container)
         surfaceView = SurfaceView(this)
         container.addView(surfaceView)
 
-        // Initialize ModelViewer with the SurfaceView.
         modelViewer = ModelViewer(surfaceView)
-
-        // (Optional) Set a touch listener for interaction.
         surfaceView.setOnTouchListener(modelViewer)
 
-        // Load your 3D model from assets.
-        loadGlb("DamagedHelmet") // Ensure you have assets/models/DamagedHelmet.glb
+        // Get the detected object's name from the Intent extras.
+        val rawObjectName = intent.getStringExtra("objectName")
+        Log.d(TAG, "Received objectName: '$rawObjectName'")
+        loadModelForObject(rawObjectName)
     }
 
     override fun onResume() {
@@ -70,12 +69,35 @@ class MainActivity2 : AppCompatActivity() {
     }
 
     /**
+     * Loads a 3D model based on the provided object name.
+     */
+    private fun loadModelForObject(objectName: String?) {
+        if (objectName == null) {
+            Log.e(TAG, "objectName is null. Loading default model.")
+            loadGlb("DamagedHelmet")
+            return
+        }
+        // Remove leading/trailing whitespace, convert to lowercase, and remove all inner whitespace.
+        val cleaned = objectName.trim().lowercase().replace("\\s+".toRegex(), "")
+        Log.d(TAG, "Cleaned object name: '$cleaned' (original: '$objectName')")
+        when (cleaned) {
+            "sandakadapahana" -> loadGlb("sandakadapahana")
+            "muragala"         -> loadGlb("muragala")
+            "korawakgala"      -> loadGlb("korawakgala")
+            "wamanarupa"       -> loadGlb("wamanarupa")
+            else -> {
+                Log.d(TAG, "No matching case for '$cleaned'. Loading default model.")
+                loadGlb("DamagedHelmet")
+            }
+        }
+    }
+
+    /**
      * Loads a glTF binary model (.glb) from the assets folder.
      */
     private fun loadGlb(name: String) {
         val buffer = readAsset("models/${name}.glb")
         modelViewer.loadModelGlb(buffer)
-        // Adjust the model to fit within a unit cube.
         modelViewer.transformToUnitCube()
     }
 
